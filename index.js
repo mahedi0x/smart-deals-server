@@ -28,6 +28,30 @@ const client = new MongoClient(uri, {
         const db = client.db("smart_db");
         const productCollection = db.collection("products");
         const bidsCollection = db.collection("bids");
+        const usersCollection = db.collection("users");
+
+        // app.post("/users", async(req, res)=>{
+        //     const newUser = req.body;
+        //     const result = await usersCollection.insertOne(newUser);
+        //     res.send(result);
+        // })
+
+         // USERS APIs
+         app.post('/users', async (req, res) => {
+            const newUser = req.body;
+            const email = req.body.email;
+            const query = { email: email }
+            const existingUser = await usersCollection.findOne(query);
+
+            if (existingUser) {
+                res.send({ message: 'user already exits. do not need to insert again' })
+            }
+            else {
+                const result = await usersCollection.insertOne(newUser);
+                res.send(result);
+            }
+        })
+
 
         // ======================== Get All Products  ========================
         app.get("/products", async (req, res) => {
