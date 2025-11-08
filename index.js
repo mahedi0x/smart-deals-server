@@ -20,7 +20,6 @@ const client = new MongoClient(uri, {
     }
   });
 
- 
 
   async function run() {
     try{
@@ -28,15 +27,26 @@ const client = new MongoClient(uri, {
 
         const db = client.db("smart_db");
         const productCollection = db.collection("products");
+        const bidsCollection = db.collection("bids");
 
         // ======================== Get All Products  ========================
         app.get("/products", async (req, res) => {
-            const product = await productCollection.find().toArray();
+            // const projectFields = {title: 1, price_min: 1, price_max: 1, image: 1};
+            // const product = (await productCollection.find().sort({price_min: 1}).limit(5).project(projectFields).toArray());
+
+            console.log(req.query);
+            const email = req.query.email;
+            const query = {};
+            if(email){
+                query.email = email;
+            }
+
+            const product = (await productCollection.find(query).toArray());
             res.send(product);
           });
 
 
-        // ======================== Get specific Product by id ========================
+        // ======================== Find  ========================
         app.get("/products/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -52,9 +62,9 @@ const client = new MongoClient(uri, {
         })
 
          // ======================= Update ====================
-        app.patch("/products/:id", async (req, res) => {
-            const id = req.params.id; // URL থেকে id নেওয়া
-            const updatedProduct = req.body; // ক্লায়েন্ট থেকে আপডেট ডেটা
+         app.patch("/products/:id", async (req, res) => {
+            const id = req.params.id; 
+            const updatedProduct = req.body; 
             const query = { _id: new ObjectId(id) };
             const updateDoc = {
               $set: {
@@ -74,6 +84,38 @@ const client = new MongoClient(uri, {
             const result = await productCollection.deleteOne(query);
             res.send(result);
         })
+
+
+        //======================== bid related api ======================
+
+        app.get("/bids", async(req, res) =>{
+            const email = req.query.email;
+            const query = {};
+            if(email){
+                query.buyer_email = email;
+            }
+            const result = await bidsCollection.find(query).toArray();
+            res.send(result);
+        })
+
+
+
+        app.post("/bids", async(req, res) =>{
+            const newBid = req.body;
+            const result = await bidsCollection.insertOne(newBid);
+            res.send(result)
+        })
+
+
+        app.get("/bids/:id", async(req, res) =>{
+            const id = req.params.id;
+            console.log(id);
+            // const query = {_id: new ObjectId(id)};
+            const bid = await bidsCollection.findOne({ _id: id }); 
+            res.send(bid)
+        })
+
+          
 
 
 
